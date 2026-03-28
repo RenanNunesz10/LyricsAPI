@@ -1,0 +1,111 @@
+package renan.dws.Lyrics.entities;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.util.List;
+import java.util.Objects;
+
+@Entity
+public class Song {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
+    @NotNull(message = "O título é obrigatório")
+    @NotBlank(message = "O título não pode estar em branco")
+    @Size(min=1, max=255)
+    private String title;
+
+    @NotNull(message = "O idioma é obrigatório")
+    @Enumerated(EnumType.STRING)
+    private Language language;
+
+    // Relacionamento N:1 (Várias músicas pertencem a um Artista)
+    @ManyToOne
+    @JoinColumn(name = "artist_id")
+    private Artist artist;
+
+    // Relacionamento N:1 (Várias músicas pertencem a um Álbum)
+    @ManyToOne
+    @JoinColumn(name = "album_id")
+    private Album album;
+
+    // Relacionamento N:M (Várias músicas têm vários gêneros)
+    @ManyToMany
+    @JoinTable(
+            name = "song_genre",
+            joinColumns = @JoinColumn(name = "song_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id")
+    )
+    private List<Genre> genres;
+
+    // Relacionamento 1:1 (Uma música tem um detalhe de letra)
+    @OneToOne(mappedBy = "song", cascade = CascadeType.ALL)
+    @JsonIgnore // Evita loop no JSON na volta do relacionamento
+    private LyricsDetails lyricsDetails;
+
+    public Song() {
+    }
+
+    public Song(String title, Language language) {
+        this.title = title;
+        this.language = language;
+    }
+
+    public Song(long id, String title, Language language) {
+        this.id = id;
+        this.title = title;
+        this.language = language;
+    }
+
+    // --- GETTERS E SETTERS ---
+
+    public long getId() { return id; }
+    public void setId(long id) { this.id = id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public Language getLanguage() { return language; }
+    public void setLanguage(Language language) { this.language = language; }
+
+    public Artist getArtist() { return artist; }
+    public void setArtist(Artist artist) { this.artist = artist; }
+
+    public Album getAlbum() { return album; }
+    public void setAlbum(Album album) { this.album = album; }
+
+    public List<Genre> getGenres() { return genres; }
+    public void setGenres(List<Genre> genres) { this.genres = genres; }
+
+    public LyricsDetails getLyricsDetails() { return lyricsDetails; }
+    public void setLyricsDetails(LyricsDetails lyricsDetails) { this.lyricsDetails = lyricsDetails; }
+
+    // --- EQUALS, HASHCODE E TOSTRING ---
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Song song = (Song) o;
+        return id == song.id && Objects.equals(title, song.title) && language == song.language;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, title, language);
+    }
+
+    @Override
+    public String toString() {
+        return "Song{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", language=" + language +
+                '}';
+    }
+}
