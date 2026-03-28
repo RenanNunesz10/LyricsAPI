@@ -76,8 +76,6 @@ public class SongController {
                 linkTo(methodOn(SongController.class).getSongs(Pageable.unpaged())).withRel("songs"));
     }
 
-    // --- REQUISITO: CONSULTA PERSONALIZADA ---
-    @Operation(summary = "Buscar músicas por idioma", description = "Filtra as músicas pelo Enum de idioma (ex: PT_BR, EN_US)")
     @GetMapping("/search/language")
     public ResponseEntity<PagedModel<EntityModel<Song>>> getSongsByLanguage(
             @RequestParam Language language, @ParameterObject Pageable pageable) {
@@ -114,9 +112,6 @@ public class SongController {
                 song -> {
                     song.setTitle(updatedSong.getTitle());
                     song.setLanguage(updatedSong.getLanguage());
-                    // Caso queira atualizar os relacionamentos no futuro, você adicionaria aqui:
-                    // song.setArtist(updatedSong.getArtist());
-                    // etc...
                     return ResponseEntity.ok(songRepository.save(song));
                 }
         ).orElseGet(() -> {

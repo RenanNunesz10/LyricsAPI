@@ -20,7 +20,7 @@ public class Album {
     @Min(value = 1900, message = "O ano de lançamento deve ser válido")
     private int releaseYear;
 
-    // Relacionamento 1:N (Um álbum tem várias músicas)
+    // 1:N (Um álbum tem várias músicas)
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Song> songs;

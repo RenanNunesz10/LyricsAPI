@@ -6,6 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import renan.dws.Lyrics.entities.Album;
 
 public interface AlbumRepository extends JpaRepository<Album, Long> {
-    // Consulta personalizada: busca álbuns de um determinado ano
     Page<Album> findByReleaseYear(int year, Pageable pageable);
 }

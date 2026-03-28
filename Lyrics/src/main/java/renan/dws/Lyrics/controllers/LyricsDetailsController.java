@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,14 +35,12 @@ public class LyricsDetailsController {
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
-    @Operation(summary = "Buscar todos os detalhes de letras")
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<LyricsDetails>>> getAllLyricsDetails(@ParameterObject Pageable pageable) {
         var details = lyricsDetailsRepository.findAll(pageable);
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(details));
     }
 
-    @Operation(summary = "Buscar detalhe de letra por ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Detalhes encontrados"),
             @ApiResponse(responseCode = "404", description = "Detalhes não encontrados", content = @Content)
@@ -58,8 +55,6 @@ public class LyricsDetailsController {
                 linkTo(methodOn(LyricsDetailsController.class).getAllLyricsDetails(Pageable.unpaged())).withRel("lyrics-details"));
     }
 
-    // --- REQUISITO: CONSULTA PERSONALIZADA ---
-    @Operation(summary = "Buscar letras por compositor (writer)")
     @GetMapping("/search/writer")
     public ResponseEntity<PagedModel<EntityModel<LyricsDetails>>> getLyricsByWriter(
             @RequestParam String writer, @ParameterObject Pageable pageable) {
@@ -67,14 +62,12 @@ public class LyricsDetailsController {
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(details));
     }
 
-    @Operation(summary = "Criar novos detalhes de letra")
     @PostMapping
     public ResponseEntity<LyricsDetails> createLyricsDetails(@Valid @RequestBody LyricsDetails newDetails) {
         lyricsDetailsRepository.save(newDetails);
         return ResponseEntity.created(URI.create("/lyrics-details/" + newDetails.getId())).body(newDetails);
     }
 
-    @Operation(summary = "Atualizar detalhes de letra existentes")
     @PutMapping("/{id}")
     public ResponseEntity<LyricsDetails> updateLyricsDetails(@PathVariable long id, @Valid @RequestBody LyricsDetails updatedDetails) {
         return lyricsDetailsRepository.findById(id).map(details -> {
@@ -87,7 +80,6 @@ public class LyricsDetailsController {
         });
     }
 
-    @Operation(summary = "Deletar detalhes de letra")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLyricsDetails(@PathVariable long id) {
         if (!lyricsDetailsRepository.existsById(id)) {

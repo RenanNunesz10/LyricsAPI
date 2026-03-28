@@ -18,9 +18,9 @@ public class Artist {
 
     private String nationality;
 
-    // Relacionamento 1:N (Um artista tem várias músicas)
+    // 1:N (Um artista tem várias músicas)
     @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL)
-    @JsonIgnore // Essencial para evitar o loop infinito no JSON
+    @JsonIgnore // Evita um loop infinito do json
     private List<Song> songs;
 
     public Artist() {}

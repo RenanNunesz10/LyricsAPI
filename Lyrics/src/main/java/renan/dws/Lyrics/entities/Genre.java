@@ -14,10 +14,9 @@ public class Genre {
     private long id;
 
     @NotBlank(message = "O nome do gênero é obrigatório")
-    @Column(unique = true) // Gêneros não devem se repetir
+    @Column(unique = true)
     private String name;
 
-    // Relacionamento M:N (O lado inverso, espelhando o que está em Song)
     @ManyToMany(mappedBy = "genres")
     @JsonIgnore
     private List<Song> songs;

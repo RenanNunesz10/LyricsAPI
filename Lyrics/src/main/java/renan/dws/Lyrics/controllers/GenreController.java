@@ -37,14 +37,12 @@ public class GenreController {
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
-    @Operation(summary = "Buscar todos os gêneros")
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<Genre>>> getAllGenres(@ParameterObject Pageable pageable) {
         var genres = genreRepository.findAll(pageable);
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(genres));
     }
 
-    @Operation(summary = "Buscar gênero por ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Gênero encontrado"),
             @ApiResponse(responseCode = "404", description = "Gênero não encontrado", content = @Content)
@@ -59,8 +57,6 @@ public class GenreController {
                 linkTo(methodOn(GenreController.class).getAllGenres(Pageable.unpaged())).withRel("genres"));
     }
 
-    // --- REQUISITO: CONSULTA PERSONALIZADA ---
-    @Operation(summary = "Buscar gênero pelo nome exato")
     @GetMapping("/search/name")
     public EntityModel<Genre> getGenreByName(@RequestParam String name) {
         var genre = genreRepository.findByNameIgnoreCase(name)
@@ -71,14 +67,12 @@ public class GenreController {
                 linkTo(methodOn(GenreController.class).getAllGenres(Pageable.unpaged())).withRel("genres"));
     }
 
-    @Operation(summary = "Criar um novo gênero")
     @PostMapping
     public ResponseEntity<Genre> createGenre(@Valid @RequestBody Genre newGenre) {
         genreRepository.save(newGenre);
         return ResponseEntity.created(URI.create("/genres/" + newGenre.getId())).body(newGenre);
     }
 
-    @Operation(summary = "Atualizar um gênero existente")
     @PutMapping("/{id}")
     public ResponseEntity<Genre> updateGenre(@PathVariable long id, @Valid @RequestBody Genre updatedGenre) {
         return genreRepository.findById(id).map(genre -> {
@@ -90,7 +84,6 @@ public class GenreController {
         });
     }
 
-    @Operation(summary = "Deletar um gênero")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGenre(@PathVariable long id) {
         if (!genreRepository.existsById(id)) {

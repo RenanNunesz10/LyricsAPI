@@ -12,12 +12,12 @@ public class LyricsDetails {
     private long id;
 
     @NotBlank(message = "A letra da música não pode estar vazia")
-    @Column(columnDefinition = "TEXT") // Permite textos bem longos no banco H2
+    @Column(columnDefinition = "TEXT")
     private String textBody;
 
     private String originalWriters;
 
-    // Relacionamento 1:1 (A letra pertence a uma música)
+    // 1:1 (A letra pertence a uma música)
     @OneToOne
     @JoinColumn(name = "song_id", referencedColumnName = "id")
     private Song song;

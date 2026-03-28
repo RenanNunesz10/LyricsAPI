@@ -24,17 +24,17 @@ public class Song {
     @Enumerated(EnumType.STRING)
     private Language language;
 
-    // Relacionamento N:1 (Várias músicas pertencem a um Artista)
+    // N:1 (Várias músicas pertencem a um Artista)
     @ManyToOne
     @JoinColumn(name = "artist_id")
     private Artist artist;
 
-    // Relacionamento N:1 (Várias músicas pertencem a um Álbum)
+    // N:1 (Várias músicas pertencem a um Álbum)
     @ManyToOne
     @JoinColumn(name = "album_id")
     private Album album;
 
-    // Relacionamento N:M (Várias músicas têm vários gêneros)
+    // N:M (Várias músicas têm vários gêneros)
     @ManyToMany
     @JoinTable(
             name = "song_genre",
@@ -43,9 +43,9 @@ public class Song {
     )
     private List<Genre> genres;
 
-    // Relacionamento 1:1 (Uma música tem um detalhe de letra)
+    // 1:1 (Uma música tem um detalhe de letra)
     @OneToOne(mappedBy = "song", cascade = CascadeType.ALL)
-    @JsonIgnore // Evita loop no JSON na volta do relacionamento
+    @JsonIgnore
     private LyricsDetails lyricsDetails;
 
     public Song() {
@@ -61,8 +61,6 @@ public class Song {
         this.title = title;
         this.language = language;
     }
-
-    // --- GETTERS E SETTERS ---
 
     public long getId() { return id; }
     public void setId(long id) { this.id = id; }
@@ -84,8 +82,6 @@ public class Song {
 
     public LyricsDetails getLyricsDetails() { return lyricsDetails; }
     public void setLyricsDetails(LyricsDetails lyricsDetails) { this.lyricsDetails = lyricsDetails; }
-
-    // --- EQUALS, HASHCODE E TOSTRING ---
 
     @Override
     public boolean equals(Object o) {

@@ -39,14 +39,12 @@ public class ArtistController {
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
-    @Operation(summary = "Buscar todos os artistas", description = "Retorna uma lista paginada de artistas")
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<Artist>>> getAllArtists(@ParameterObject Pageable pageable) {
         var artists = artistRepository.findAll(pageable);
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(artists));
     }
 
-    @Operation(summary = "Buscar artista por ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Artista encontrado"),
             @ApiResponse(responseCode = "404", description = "Artista não encontrado", content = @Content)
@@ -61,8 +59,6 @@ public class ArtistController {
                 linkTo(methodOn(ArtistController.class).getAllArtists(Pageable.unpaged())).withRel("artists"));
     }
 
-    // --- REQUISITO: CONSULTA PERSONALIZADA ---
-    @Operation(summary = "Buscar artistas por nacionalidade", description = "Retorna artistas filtrados pela nacionalidade (paginado)")
     @GetMapping("/search/nationality")
     public ResponseEntity<PagedModel<EntityModel<Artist>>> getArtistsByNationality(
             @RequestParam String nationality, @ParameterObject Pageable pageable) {
@@ -70,14 +66,12 @@ public class ArtistController {
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(artists));
     }
 
-    @Operation(summary = "Criar um novo artista")
     @PostMapping
     public ResponseEntity<Artist> createArtist(@Valid @RequestBody Artist newArtist) {
         artistRepository.save(newArtist);
         return ResponseEntity.created(URI.create("/artists/" + newArtist.getId())).body(newArtist);
     }
 
-    @Operation(summary = "Atualizar um artista existente")
     @PutMapping("/{id}")
     public ResponseEntity<Artist> updateArtist(@PathVariable long id, @Valid @RequestBody Artist updatedArtist) {
         return artistRepository.findById(id).map(artist -> {
@@ -90,7 +84,6 @@ public class ArtistController {
         });
     }
 
-    @Operation(summary = "Deletar um artista")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteArtist(@PathVariable long id) {
         if (!artistRepository.existsById(id)) {

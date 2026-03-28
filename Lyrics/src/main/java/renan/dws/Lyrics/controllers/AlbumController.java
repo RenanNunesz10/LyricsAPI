@@ -37,14 +37,12 @@ public class AlbumController {
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
-    @Operation(summary = "Buscar todos os álbuns")
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<Album>>> getAllAlbums(@ParameterObject Pageable pageable) {
         var albums = albumRepository.findAll(pageable);
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(albums));
     }
 
-    @Operation(summary = "Buscar álbum por ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Álbum encontrado"),
             @ApiResponse(responseCode = "404", description = "Álbum não encontrado", content = @Content)
@@ -59,8 +57,6 @@ public class AlbumController {
                 linkTo(methodOn(AlbumController.class).getAllAlbums(Pageable.unpaged())).withRel("albums"));
     }
 
-    // --- REQUISITO: CONSULTA PERSONALIZADA ---
-    @Operation(summary = "Buscar álbuns por ano de lançamento")
     @GetMapping("/search/year")
     public ResponseEntity<PagedModel<EntityModel<Album>>> getAlbumsByYear(
             @RequestParam int year, @ParameterObject Pageable pageable) {
@@ -68,14 +64,12 @@ public class AlbumController {
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(albums));
     }
 
-    @Operation(summary = "Criar um novo álbum")
     @PostMapping
     public ResponseEntity<Album> createAlbum(@Valid @RequestBody Album newAlbum) {
         albumRepository.save(newAlbum);
         return ResponseEntity.created(URI.create("/albums/" + newAlbum.getId())).body(newAlbum);
     }
 
-    @Operation(summary = "Atualizar um álbum existente")
     @PutMapping("/{id}")
     public ResponseEntity<Album> updateAlbum(@PathVariable long id, @Valid @RequestBody Album updatedAlbum) {
         return albumRepository.findById(id).map(album -> {
@@ -88,7 +82,6 @@ public class AlbumController {
         });
     }
 
-    @Operation(summary = "Deletar um álbum")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAlbum(@PathVariable long id) {
         if (!albumRepository.existsById(id)) {
