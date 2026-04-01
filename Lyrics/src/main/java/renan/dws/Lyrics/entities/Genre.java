@@ -14,7 +14,7 @@ public class Genre {
     private long id;
 
     @NotBlank(message = "O nome do gênero é obrigatório")
-    @Column(unique = true)
+    @Column(unique = true, nullable = false) // <-- Adicionamos o nullable = false aqui
     private String name;
 
     @ManyToMany(mappedBy = "genres")

@@ -25,13 +25,15 @@ public class Song {
     private Language language;
 
     // N:1 (Várias músicas pertencem a um Artista)
+    @NotNull(message = "O artista é obrigatório para criar uma música")
     @ManyToOne
-    @JoinColumn(name = "artist_id")
+    @JoinColumn(name = "artist_id", nullable = false)
     private Artist artist;
 
     // N:1 (Várias músicas pertencem a um Álbum)
+    @NotNull(message = "O álbum é obrigatório")
     @ManyToOne
-    @JoinColumn(name = "album_id")
+    @JoinColumn(name = "album_id", nullable = false)
     private Album album;
 
     // N:M (Várias músicas têm vários gêneros)
@@ -43,7 +45,7 @@ public class Song {
     )
     private List<Genre> genres;
 
-    // 1:1 (Uma música tem um detalhe de letra)
+    // 1:1 (Uma música tem uma letra)
     @OneToOne(mappedBy = "song", cascade = CascadeType.ALL)
     @JsonIgnore
     private LyricsDetails lyricsDetails;

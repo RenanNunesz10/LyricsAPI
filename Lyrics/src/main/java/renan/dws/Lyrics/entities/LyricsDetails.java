@@ -2,8 +2,14 @@ package renan.dws.Lyrics.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Objects;
 
+@Setter
+@Getter
 @Entity
 public class LyricsDetails {
 
@@ -12,49 +18,18 @@ public class LyricsDetails {
     private long id;
 
     @NotBlank(message = "A letra da música não pode estar vazia")
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false) // <-- Adicionamos nullable = false
     private String textBody;
 
     private String originalWriters;
 
     // 1:1 (A letra pertence a uma música)
+    @NotNull(message = "A letra deve estar obrigatoriamente vinculada a uma música") // <-- Proteção da API
     @OneToOne
-    @JoinColumn(name = "song_id", referencedColumnName = "id")
+    @JoinColumn(name = "song_id", referencedColumnName = "id", nullable = false) // <-- Proteção do Banco
     private Song song;
 
     public LyricsDetails() {}
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getTextBody() {
-        return textBody;
-    }
-
-    public void setTextBody(String textBody) {
-        this.textBody = textBody;
-    }
-
-    public String getOriginalWriters() {
-        return originalWriters;
-    }
-
-    public void setOriginalWriters(String originalWriters) {
-        this.originalWriters = originalWriters;
-    }
-
-    public Song getSong() {
-        return song;
-    }
-
-    public void setSong(Song song) {
-        this.song = song;
-    }
 
     @Override
     public boolean equals(Object o) {

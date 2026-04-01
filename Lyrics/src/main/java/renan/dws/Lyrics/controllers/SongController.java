@@ -26,7 +26,7 @@ import java.net.URI;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
-@Tag(name="songs", description = "Songs route")
+@Tag(name="Músicas", description = "Lista de Músicas")
 @RestController
 @RequestMapping("/songs")
 public class SongController {
@@ -87,7 +87,7 @@ public class SongController {
             @ApiResponse(responseCode = "201", description = "Song created successfully",
                     content = { @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Song.class)) }),
-            @ApiResponse(responseCode = "400", description = "Invalid input provided") })
+            @ApiResponse(responseCode = "400", description = "Erro de validação: Faltou o artista, álbum ou título inválido") })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Song> createSong(
@@ -95,7 +95,8 @@ public class SongController {
                     description = "Song to create", required = true,
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Song.class),
-                            examples = @ExampleObject(value = "{ \"title\": \"Bohemian Rhapsody\", \"language\": \"EN_US\" }")))
+                            // 👇 Veja que agora o exemplo inclui o artista e o álbum!
+                            examples = @ExampleObject(value = "{ \"title\": \"Bohemian Rhapsody\", \"language\": \"EN_US\", \"artist\": { \"id\": 1 }, \"album\": { \"id\": 1 } }")))
             @Valid @RequestBody Song newSong){
 
         songRepository.save(newSong);
@@ -112,6 +113,8 @@ public class SongController {
                 song -> {
                     song.setTitle(updatedSong.getTitle());
                     song.setLanguage(updatedSong.getLanguage());
+                    song.setArtist(updatedSong.getArtist()); // Atualiza o artista
+                    song.setAlbum(updatedSong.getAlbum());   // Atualiza o álbum
                     return ResponseEntity.ok(songRepository.save(song));
                 }
         ).orElseGet(() -> {

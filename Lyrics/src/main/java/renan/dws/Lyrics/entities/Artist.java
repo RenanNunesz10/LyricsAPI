@@ -14,9 +14,10 @@ public class Artist {
     private long id;
 
     @NotBlank(message = "O nome do artista é obrigatório")
+    @Column(nullable = false) // <-- Proteção no banco de dados
     private String name;
 
-    private String nationality;
+    private String nationality; // Deixei opcional, mas você pode adicionar validações se quiser!
 
     // 1:N (Um artista tem várias músicas)
     @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL)

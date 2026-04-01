@@ -2,6 +2,7 @@ package renan.dws.Lyrics.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
@@ -15,9 +16,11 @@ public class Album {
     private long id;
 
     @NotBlank(message = "O título do álbum é obrigatório")
+    @Column(nullable = false) // <-- Proteção direto na tabela do banco (H2)
     private String title;
 
-    @Min(value = 1900, message = "O ano de lançamento deve ser válido")
+    @Min(value = 1900, message = "O ano de lançamento deve ser maior ou igual a 1900")
+    @Max(value = 2026, message = "O ano de lançamento não pode estar no futuro") // <-- Regra extra legal de ter!
     private int releaseYear;
 
     // 1:N (Um álbum tem várias músicas)

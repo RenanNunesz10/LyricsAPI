@@ -2,6 +2,7 @@ package renan.dws.Lyrics.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -25,7 +26,7 @@ import java.net.URI;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
-@Tag(name="artists", description = "Rotas de Artistas")
+@Tag(name="Artistas", description = "Lista de Artistas")
 @RestController
 @RequestMapping("/artists")
 public class ArtistController {
@@ -39,14 +40,18 @@ public class ArtistController {
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
+    @Operation(summary = "Lista todos os artistas", description = "Retorna uma lista paginada de todos os artistas cadastrados.")
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<Artist>>> getAllArtists(@ParameterObject Pageable pageable) {
         var artists = artistRepository.findAll(pageable);
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(artists));
     }
 
+    @Operation(summary = "Busca um artista por ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Artista encontrado"),
+            @ApiResponse(responseCode = "200", description = "Artista encontrado",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Artist.class)) }),
             @ApiResponse(responseCode = "404", description = "Artista não encontrado", content = @Content)
     })
     @GetMapping("/{id}")
@@ -59,6 +64,7 @@ public class ArtistController {
                 linkTo(methodOn(ArtistController.class).getAllArtists(Pageable.unpaged())).withRel("artists"));
     }
 
+    @Operation(summary = "Busca artistas pela nacionalidade")
     @GetMapping("/search/nationality")
     public ResponseEntity<PagedModel<EntityModel<Artist>>> getArtistsByNationality(
             @RequestParam String nationality, @ParameterObject Pageable pageable) {
@@ -66,14 +72,39 @@ public class ArtistController {
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(artists));
     }
 
+    @Operation(summary = "Cria um novo artista")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Artista criado com sucesso",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Artist.class)) }),
+            @ApiResponse(responseCode = "400", description = "Erro de validação: Nome do artista vazio", content = @Content) })
     @PostMapping
-    public ResponseEntity<Artist> createArtist(@Valid @RequestBody Artist newArtist) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<Artist> createArtist(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Dados do artista a ser criado", required = true,
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Artist.class),
+                            examples = @ExampleObject(value = "{ \"name\": \"Metallica\", \"nationality\": \"Estadunidense\" }")))
+            @Valid @RequestBody Artist newArtist) {
         artistRepository.save(newArtist);
         return ResponseEntity.created(URI.create("/artists/" + newArtist.getId())).body(newArtist);
     }
 
+    @Operation(summary = "Atualiza um artista existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Artista atualizado com sucesso"),
+            @ApiResponse(responseCode = "201", description = "Novo artista criado com sucesso (ID não existia)"),
+            @ApiResponse(responseCode = "400", description = "Erro de validação: Nome do artista vazio", content = @Content) })
     @PutMapping("/{id}")
-    public ResponseEntity<Artist> updateArtist(@PathVariable long id, @Valid @RequestBody Artist updatedArtist) {
+    public ResponseEntity<Artist> updateArtist(
+            @PathVariable long id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Dados do artista para atualizar", required = true,
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Artist.class),
+                            examples = @ExampleObject(value = "{ \"name\": \"Metallica\", \"nationality\": \"EUA\" }")))
+            @Valid @RequestBody Artist updatedArtist) {
         return artistRepository.findById(id).map(artist -> {
             artist.setName(updatedArtist.getName());
             artist.setNationality(updatedArtist.getNationality());
@@ -84,6 +115,11 @@ public class ArtistController {
         });
     }
 
+    @Operation(summary = "Deleta um artista pelo ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Artista deletado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Artista não encontrado")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteArtist(@PathVariable long id) {
         if (!artistRepository.existsById(id)) {
