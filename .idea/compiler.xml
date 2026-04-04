@@ -12,6 +12,9 @@
         <module name="Lyrics" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="LyricsAPI" target="25" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
