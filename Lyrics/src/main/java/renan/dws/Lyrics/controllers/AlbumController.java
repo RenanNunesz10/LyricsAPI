@@ -34,20 +34,27 @@ public class AlbumController {
     private final AlbumRepository albumRepository;
     private final PagedResourcesAssembler<Album> pagedResourcesAssembler;
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     public AlbumController(AlbumRepository albumRepository, PagedResourcesAssembler<Album> pagedResourcesAssembler) {
         this.albumRepository = albumRepository;
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
-    @Operation(summary = "Lista todos os álbuns", description = "Retorna uma lista paginada de todos os álbuns cadastrados no banco.")
+    @Operation(
+            summary = "Lista todos os álbuns",
+            description = "Retorna uma lista paginada de álbuns. A resposta inclui links de navegação **HATEOAS** para transitar entre as páginas de resultados."
+    )
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<Album>>> getAllAlbums(@ParameterObject Pageable pageable) {
         var albums = albumRepository.findAll(pageable);
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(albums));
     }
 
-    @Operation(summary = "Busca um álbum por ID")
+    @Operation(
+            summary = "Busca um álbum por ID",
+            description = "Recupera os detalhes de um álbum pelo identificador único. Inclui links **HATEOAS** apontando para o próprio recurso (`self`) e para a lista geral de álbuns (`albums`)."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Álbum encontrado",
                     content = { @Content(mediaType = "application/json",
@@ -64,7 +71,10 @@ public class AlbumController {
                 linkTo(methodOn(AlbumController.class).getAllAlbums(Pageable.unpaged())).withRel("albums"));
     }
 
-    @Operation(summary = "Busca álbuns pelo ano de lançamento")
+    @Operation(
+            summary = "Busca álbuns pelo ano de lançamento",
+            description = "Filtra os álbuns pelo ano exato de lançamento informado. Retorna uma lista paginada e navegável."
+    )
     @GetMapping("/search/year")
     public ResponseEntity<PagedModel<EntityModel<Album>>> getAlbumsByYear(
             @RequestParam int year, @ParameterObject Pageable pageable) {
@@ -72,7 +82,10 @@ public class AlbumController {
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(albums));
     }
 
-    @Operation(summary = "Cria um novo álbum")
+    @Operation(
+            summary = "Cria um novo álbum",
+            description = "Cadastra um novo álbum no banco de dados. Retorna o objeto criado e a URI de acesso no cabeçalho `Location`."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Álbum criado com sucesso",
                     content = { @Content(mediaType = "application/json",
@@ -92,7 +105,10 @@ public class AlbumController {
         return ResponseEntity.created(URI.create("/albums/" + newAlbum.getId())).body(newAlbum);
     }
 
-    @Operation(summary = "Atualiza um álbum existente")
+    @Operation(
+            summary = "Atualiza um álbum existente",
+            description = "Atualiza os dados de um álbum. Utiliza a lógica de **Upsert**: caso o ID informado não exista, um novo álbum será criado com esses dados."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Álbum atualizado com sucesso"),
             @ApiResponse(responseCode = "201", description = "Novo álbum criado com sucesso (ID não existia)"),
@@ -111,13 +127,14 @@ public class AlbumController {
             album.setTitle(updatedAlbum.getTitle());
             album.setReleaseYear(updatedAlbum.getReleaseYear());
             return ResponseEntity.ok(albumRepository.save(album));
-        }).orElseGet(() -> {
-            return ResponseEntity.created(URI.create("/albums/" + updatedAlbum.getId()))
-                    .body(albumRepository.save(updatedAlbum));
-        });
+        }).orElseGet(() -> ResponseEntity.created(URI.create("/albums/" + updatedAlbum.getId()))
+                .body(albumRepository.save(updatedAlbum)));
     }
 
-    @Operation(summary = "Deleta um álbum pelo ID")
+    @Operation(
+            summary = "Deleta um álbum pelo ID",
+            description = "Remove um álbum do banco de dados pelo seu ID. Retorna status `204 No Content` em caso de sucesso."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Álbum deletado com sucesso"),
             @ApiResponse(responseCode = "404", description = "Álbum não encontrado")

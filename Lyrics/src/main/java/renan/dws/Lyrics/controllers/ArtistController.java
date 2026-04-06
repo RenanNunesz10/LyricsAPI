@@ -34,20 +34,27 @@ public class ArtistController {
     private final ArtistRepository artistRepository;
     private final PagedResourcesAssembler<Artist> pagedResourcesAssembler;
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     public ArtistController(ArtistRepository artistRepository, PagedResourcesAssembler<Artist> pagedResourcesAssembler) {
         this.artistRepository = artistRepository;
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
-    @Operation(summary = "Lista todos os artistas", description = "Retorna uma lista paginada de todos os artistas cadastrados.")
+    @Operation(
+            summary = "Lista todos os artistas",
+            description = "Retorna uma lista paginada de artistas. A resposta inclui links de navegação **HATEOAS** para transitar entre as páginas de resultados."
+    )
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<Artist>>> getAllArtists(@ParameterObject Pageable pageable) {
         var artists = artistRepository.findAll(pageable);
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(artists));
     }
 
-    @Operation(summary = "Busca um artista por ID")
+    @Operation(
+            summary = "Busca um artista por ID",
+            description = "Recupera os detalhes de um artista pelo identificador único. Inclui links **HATEOAS** apontando para o próprio recurso (`self`) e para a lista geral de artistas (`artists`)."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Artista encontrado",
                     content = { @Content(mediaType = "application/json",
@@ -64,7 +71,10 @@ public class ArtistController {
                 linkTo(methodOn(ArtistController.class).getAllArtists(Pageable.unpaged())).withRel("artists"));
     }
 
-    @Operation(summary = "Busca artistas pela nacionalidade")
+    @Operation(
+            summary = "Busca artistas pela nacionalidade",
+            description = "Filtra os artistas pela nacionalidade informada (ignorando maiúsculas e minúsculas). Retorna uma lista paginada e navegável."
+    )
     @GetMapping("/search/nationality")
     public ResponseEntity<PagedModel<EntityModel<Artist>>> getArtistsByNationality(
             @RequestParam String nationality, @ParameterObject Pageable pageable) {
@@ -72,7 +82,10 @@ public class ArtistController {
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(artists));
     }
 
-    @Operation(summary = "Cria um novo artista")
+    @Operation(
+            summary = "Cria um novo artista",
+            description = "Cadastra um novo artista no banco de dados. Retorna o objeto criado e a URI de acesso no cabeçalho `Location`."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Artista criado com sucesso",
                     content = { @Content(mediaType = "application/json",
@@ -91,7 +104,10 @@ public class ArtistController {
         return ResponseEntity.created(URI.create("/artists/" + newArtist.getId())).body(newArtist);
     }
 
-    @Operation(summary = "Atualiza um artista existente")
+    @Operation(
+            summary = "Atualiza um artista existente",
+            description = "Atualiza os dados de um artista. Utiliza a lógica de **Upsert**: caso o ID informado não exista, um novo artista será criado com esses dados."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Artista atualizado com sucesso"),
             @ApiResponse(responseCode = "201", description = "Novo artista criado com sucesso (ID não existia)"),
@@ -109,13 +125,14 @@ public class ArtistController {
             artist.setName(updatedArtist.getName());
             artist.setNationality(updatedArtist.getNationality());
             return ResponseEntity.ok(artistRepository.save(artist));
-        }).orElseGet(() -> {
-            return ResponseEntity.created(URI.create("/artists/" + updatedArtist.getId()))
-                    .body(artistRepository.save(updatedArtist));
-        });
+        }).orElseGet(() -> ResponseEntity.created(URI.create("/artists/" + updatedArtist.getId()))
+                .body(artistRepository.save(updatedArtist)));
     }
 
-    @Operation(summary = "Deleta um artista pelo ID")
+    @Operation(
+            summary = "Deleta um artista pelo ID",
+            description = "Remove um artista do banco de dados pelo seu ID. Retorna status `204 No Content` em caso de sucesso."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Artista deletado com sucesso"),
             @ApiResponse(responseCode = "404", description = "Artista não encontrado")

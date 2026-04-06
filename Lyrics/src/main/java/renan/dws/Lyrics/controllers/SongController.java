@@ -43,7 +43,10 @@ public class SongController {
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
-    @Operation(summary = "Lista todas as músicas", description = "Retorna uma lista paginada de todas as músicas cadastradas no banco de dados.")
+    @Operation(
+            summary = "Lista todas as músicas",
+            description = "Retorna uma lista paginada de todas as músicas cadastradas. A resposta inclui links de navegação **HATEOAS** para transitar entre as páginas de resultados."
+    )
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<PagedModel<EntityModel<Song>>> getSongs(@ParameterObject Pageable pageable){
@@ -52,7 +55,10 @@ public class SongController {
         return ResponseEntity.ok(pagedModelSongs);
     }
 
-    @Operation(summary = "Busca uma música por ID")
+    @Operation(
+            summary = "Busca uma música por ID",
+            description = "Recupera os detalhes de uma música pelo identificador único. Inclui links **HATEOAS** apontando para o próprio recurso (`self`) e para a lista geral de músicas (`songs`)."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Música encontrada",
                     content = { @Content(mediaType = "application/json",
@@ -69,7 +75,10 @@ public class SongController {
                 linkTo(methodOn(SongController.class).getSongs(Pageable.unpaged())).withRel("songs"));
     }
 
-    @Operation(summary = "Busca músicas pelo idioma")
+    @Operation(
+            summary = "Busca músicas pelo idioma",
+            description = "Filtra as músicas utilizando o idioma especificado no `Enum`. Retorna uma lista paginada e navegável com controles **HATEOAS**."
+    )
     @GetMapping("/search/language")
     public ResponseEntity<PagedModel<EntityModel<Song>>> getSongsByLanguage(
             @RequestParam Language language, @ParameterObject Pageable pageable) {
@@ -77,7 +86,10 @@ public class SongController {
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(songs));
     }
 
-    @Operation(summary = "Cria uma nova música")
+    @Operation(
+            summary = "Cria uma nova música",
+            description = "Cadastra uma nova música no banco de dados, vinculando-a a um artista e um álbum. Retorna o objeto criado e a URI de acesso no cabeçalho `Location`."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Música criada com sucesso",
                     content = { @Content(mediaType = "application/json",
@@ -99,7 +111,10 @@ public class SongController {
                 .body(newSong);
     }
 
-    @Operation(summary = "Atualiza uma música existente")
+    @Operation(
+            summary = "Atualiza uma música existente",
+            description = "Atualiza os dados de uma música. Utiliza a lógica de **Upsert**: caso o ID informado não exista, uma nova música será criada com esses dados."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Música atualizada com sucesso"),
             @ApiResponse(responseCode = "201", description = "Nova música criada com sucesso (ID não existia)"),
@@ -127,7 +142,10 @@ public class SongController {
                 .body(songRepository.save(updatedSong)));
     }
 
-    @Operation(summary = "Deleta uma música pelo ID")
+    @Operation(
+            summary = "Deleta uma música pelo ID",
+            description = "Remove uma música do banco de dados pelo seu ID. Retorna status `204 No Content` em caso de sucesso."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Música deletada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Música não encontrada")

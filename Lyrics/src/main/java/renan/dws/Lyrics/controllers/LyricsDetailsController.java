@@ -34,20 +34,27 @@ public class LyricsDetailsController {
     private final LyricsDetailsRepository lyricsDetailsRepository;
     private final PagedResourcesAssembler<LyricsDetails> pagedResourcesAssembler;
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     public LyricsDetailsController(LyricsDetailsRepository lyricsDetailsRepository, PagedResourcesAssembler<LyricsDetails> pagedResourcesAssembler) {
         this.lyricsDetailsRepository = lyricsDetailsRepository;
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
-    @Operation(summary = "Lista todas as letras", description = "Retorna uma lista paginada de todas as letras cadastradas.")
+    @Operation(
+            summary = "Lista todas as letras",
+            description = "Retorna uma lista paginada de todas as letras cadastradas. A resposta inclui links de navegação **HATEOAS** para transitar entre as páginas de resultados."
+    )
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<LyricsDetails>>> getAllLyricsDetails(@ParameterObject Pageable pageable) {
         var details = lyricsDetailsRepository.findAll(pageable);
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(details));
     }
 
-    @Operation(summary = "Busca uma letra por ID")
+    @Operation(
+            summary = "Busca uma letra por ID",
+            description = "Recupera os detalhes de uma letra específica pelo seu identificador único. Inclui links **HATEOAS** apontando para o próprio recurso (`self`) e para a lista geral de letras (`lyrics-details`)."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Detalhes encontrados",
                     content = { @Content(mediaType = "application/json",
@@ -64,7 +71,10 @@ public class LyricsDetailsController {
                 linkTo(methodOn(LyricsDetailsController.class).getAllLyricsDetails(Pageable.unpaged())).withRel("lyrics-details"));
     }
 
-    @Operation(summary = "Busca letras pelo compositor original")
+    @Operation(
+            summary = "Busca letras pelo compositor original",
+            description = "Filtra as letras com base no nome do compositor (ignorando maiúsculas e minúsculas). Retorna uma lista paginada e navegável com controles **HATEOAS**."
+    )
     @GetMapping("/search/writer")
     public ResponseEntity<PagedModel<EntityModel<LyricsDetails>>> getLyricsByWriter(
             @RequestParam String writer, @ParameterObject Pageable pageable) {
@@ -72,7 +82,10 @@ public class LyricsDetailsController {
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(details));
     }
 
-    @Operation(summary = "Adiciona uma nova letra")
+    @Operation(
+            summary = "Adiciona uma nova letra",
+            description = "Cadastra uma nova letra no banco de dados vinculada a uma música. Retorna o objeto criado e a URI de acesso no cabeçalho `Location`."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Letra cadastrada com sucesso",
                     content = { @Content(mediaType = "application/json",
@@ -91,7 +104,10 @@ public class LyricsDetailsController {
         return ResponseEntity.created(URI.create("/lyrics-details/" + newDetails.getId())).body(newDetails);
     }
 
-    @Operation(summary = "Atualiza uma letra existente")
+    @Operation(
+            summary = "Atualiza uma letra existente",
+            description = "Atualiza o texto ou compositores de uma letra. Utiliza a lógica de **Upsert**: caso o ID informado não exista, uma nova letra será criada com esses dados."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Letra atualizada com sucesso"),
             @ApiResponse(responseCode = "201", description = "Nova letra criada com sucesso (ID não existia)"),
@@ -108,15 +124,16 @@ public class LyricsDetailsController {
         return lyricsDetailsRepository.findById(id).map(details -> {
             details.setTextBody(updatedDetails.getTextBody());
             details.setOriginalWriters(updatedDetails.getOriginalWriters());
-            details.setSong(updatedDetails.getSong()); // Adicionado para manter consistência
+            details.setSong(updatedDetails.getSong());
             return ResponseEntity.ok(lyricsDetailsRepository.save(details));
-        }).orElseGet(() -> {
-            return ResponseEntity.created(URI.create("/lyrics-details/" + updatedDetails.getId()))
-                    .body(lyricsDetailsRepository.save(updatedDetails));
-        });
+        }).orElseGet(() -> ResponseEntity.created(URI.create("/lyrics-details/" + updatedDetails.getId()))
+                .body(lyricsDetailsRepository.save(updatedDetails)));
     }
 
-    @Operation(summary = "Deleta uma letra pelo ID")
+    @Operation(
+            summary = "Deleta uma letra pelo ID",
+            description = "Remove uma letra do banco de dados pelo seu ID. Retorna status `204 No Content` em caso de sucesso."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Letra deletada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Letra não encontrada")

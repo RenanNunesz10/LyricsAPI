@@ -34,20 +34,27 @@ public class GenreController {
     private final GenreRepository genreRepository;
     private final PagedResourcesAssembler<Genre> pagedResourcesAssembler;
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     public GenreController(GenreRepository genreRepository, PagedResourcesAssembler<Genre> pagedResourcesAssembler) {
         this.genreRepository = genreRepository;
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
-    @Operation(summary = "Lista todos os gêneros", description = "Retorna uma lista paginada de todos os gêneros musicais.")
+    @Operation(
+            summary = "Lista todos os gêneros",
+            description = "Retorna uma lista paginada de gêneros musicais. A resposta inclui links de navegação **HATEOAS** para transitar entre as páginas de resultados."
+    )
     @GetMapping
     public ResponseEntity<PagedModel<EntityModel<Genre>>> getAllGenres(@ParameterObject Pageable pageable) {
         var genres = genreRepository.findAll(pageable);
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(genres));
     }
 
-    @Operation(summary = "Busca um gênero por ID")
+    @Operation(
+            summary = "Busca um gênero por ID",
+            description = "Recupera os detalhes de um gênero musical pelo seu identificador único. Inclui links **HATEOAS** apontando para o próprio recurso (`self`) e para a lista geral de gêneros (`genres`)."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Gênero encontrado",
                     content = { @Content(mediaType = "application/json",
@@ -64,7 +71,10 @@ public class GenreController {
                 linkTo(methodOn(GenreController.class).getAllGenres(Pageable.unpaged())).withRel("genres"));
     }
 
-    @Operation(summary = "Busca um gênero específico pelo nome")
+    @Operation(
+            summary = "Busca um gênero específico pelo nome",
+            description = "Realiza uma busca exata pelo nome do gênero (ignorando maiúsculas e minúsculas). Como a regra de negócio define nomes únicos no banco, retorna um único recurso com controles **HATEOAS**."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Gênero encontrado"),
             @ApiResponse(responseCode = "404", description = "Gênero não encontrado", content = @Content)
@@ -79,7 +89,10 @@ public class GenreController {
                 linkTo(methodOn(GenreController.class).getAllGenres(Pageable.unpaged())).withRel("genres"));
     }
 
-    @Operation(summary = "Cria um novo gênero")
+    @Operation(
+            summary = "Cria um novo gênero",
+            description = "Cadastra um novo gênero musical no banco de dados. Retorna o objeto criado e a URI de acesso no cabeçalho `Location`."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Gênero criado com sucesso",
                     content = { @Content(mediaType = "application/json",
@@ -98,7 +111,10 @@ public class GenreController {
         return ResponseEntity.created(URI.create("/genres/" + newGenre.getId())).body(newGenre);
     }
 
-    @Operation(summary = "Atualiza um gênero existente")
+    @Operation(
+            summary = "Atualiza um gênero existente",
+            description = "Atualiza o nome de um gênero musical. Utiliza a lógica de **Upsert**: caso o ID informado não exista, um novo gênero será criado."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Gênero atualizado com sucesso"),
             @ApiResponse(responseCode = "201", description = "Novo gênero criado com sucesso (ID não existia)"),
@@ -115,13 +131,14 @@ public class GenreController {
         return genreRepository.findById(id).map(genre -> {
             genre.setName(updatedGenre.getName());
             return ResponseEntity.ok(genreRepository.save(genre));
-        }).orElseGet(() -> {
-            return ResponseEntity.created(URI.create("/genres/" + updatedGenre.getId()))
-                    .body(genreRepository.save(updatedGenre));
-        });
+        }).orElseGet(() -> ResponseEntity.created(URI.create("/genres/" + updatedGenre.getId()))
+                .body(genreRepository.save(updatedGenre)));
     }
 
-    @Operation(summary = "Deleta um gênero pelo ID")
+    @Operation(
+            summary = "Deleta um gênero pelo ID",
+            description = "Remove um gênero do banco de dados pelo seu ID. Retorna status `204 No Content` em caso de sucesso."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Gênero deletado com sucesso"),
             @ApiResponse(responseCode = "404", description = "Gênero não encontrado")
