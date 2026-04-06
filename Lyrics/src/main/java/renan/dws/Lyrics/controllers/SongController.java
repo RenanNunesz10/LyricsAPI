@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -21,12 +22,12 @@ import renan.dws.Lyrics.entities.Song;
 import renan.dws.Lyrics.exceptions.ResourceNotFoundException;
 import renan.dws.Lyrics.repositories.SongRepository;
 
-import jakarta.validation.Valid;
 import java.net.URI;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
-@Tag(name="Músicas", description = "Lista de Músicas")
+@Tag(name="Músicas", description = "Gerenciamento de músicas do catálogo")
 @RestController
 @RequestMapping("/songs")
 public class SongController {
@@ -34,6 +35,7 @@ public class SongController {
     private final SongRepository songRepository;
     private final PagedResourcesAssembler<Song> pagedResourcesAssembler;
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     public SongController(SongRepository songRepository,
                           PagedResourcesAssembler<Song> pagedResourcesAssembler) {
@@ -41,12 +43,7 @@ public class SongController {
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
-    @Tag(name = "Get")
-    @Operation(summary = "Get all songs", description = """
-            Get all songs on the database, 
-            even if the route returns one or less 
-            items the API still returns a paginated list
-            """)
+    @Operation(summary = "Lista todas as músicas", description = "Retorna uma lista paginada de todas as músicas cadastradas no banco de dados.")
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<PagedModel<EntityModel<Song>>> getSongs(@ParameterObject Pageable pageable){
@@ -55,18 +52,14 @@ public class SongController {
         return ResponseEntity.ok(pagedModelSongs);
     }
 
-    @Tag(name = "Get Song by id",
-            description = "Get a single song by id, or returns 404 not found")
+    @Operation(summary = "Busca uma música por ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Found the song",
+            @ApiResponse(responseCode = "200", description = "Música encontrada",
                     content = { @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Song.class)) }),
-            @ApiResponse(responseCode = "400", description = "Invalid id supplied",
-                    content = @Content),
-            @ApiResponse(responseCode = "404", description = "Song not found",
-                    content = @Content) })
+            @ApiResponse(responseCode = "404", description = "Música não encontrada", content = @Content) })
     @GetMapping("/{id}")
-    public EntityModel<Song> getSongById(@PathVariable(name = "id") long id){
+    public EntityModel<Song> getSongById(@PathVariable long id){
 
         var song = songRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Música não encontrada com ID: " + id));
@@ -76,6 +69,7 @@ public class SongController {
                 linkTo(methodOn(SongController.class).getSongs(Pageable.unpaged())).withRel("songs"));
     }
 
+    @Operation(summary = "Busca músicas pelo idioma")
     @GetMapping("/search/language")
     public ResponseEntity<PagedModel<EntityModel<Song>>> getSongsByLanguage(
             @RequestParam Language language, @ParameterObject Pageable pageable) {
@@ -83,19 +77,19 @@ public class SongController {
         return ResponseEntity.ok(pagedResourcesAssembler.toModel(songs));
     }
 
+    @Operation(summary = "Cria uma nova música")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Song created successfully",
+            @ApiResponse(responseCode = "201", description = "Música criada com sucesso",
                     content = { @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Song.class)) }),
-            @ApiResponse(responseCode = "400", description = "Erro de validação: Faltou o artista, álbum ou título inválido") })
+            @ApiResponse(responseCode = "400", description = "Erro de validação: Faltou o artista, álbum ou título inválido", content = @Content) })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Song> createSong(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Song to create", required = true,
+                    description = "Dados da música a ser criada", required = true,
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Song.class),
-                            // 👇 Veja que agora o exemplo inclui o artista e o álbum!
                             examples = @ExampleObject(value = "{ \"title\": \"Bohemian Rhapsody\", \"language\": \"EN_US\", \"artist\": { \"id\": 1 }, \"album\": { \"id\": 1 } }")))
             @Valid @RequestBody Song newSong){
 
@@ -105,31 +99,44 @@ public class SongController {
                 .body(newSong);
     }
 
+    @Operation(summary = "Atualiza uma música existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Música atualizada com sucesso"),
+            @ApiResponse(responseCode = "201", description = "Nova música criada com sucesso (ID não existia)"),
+            @ApiResponse(responseCode = "400", description = "Erro de validação: Faltou o artista, álbum ou título inválido", content = @Content) })
     @PutMapping("/{id}")
-    public ResponseEntity<Song> updateSong(@PathVariable long id,
-                                           @Valid @RequestBody Song updatedSong){
+    public ResponseEntity<Song> updateSong(
+            @PathVariable long id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Dados da música para atualizar", required = true,
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Song.class),
+                            examples = @ExampleObject(value = "{ \"title\": \"Bohemian Rhapsody (Remastered)\", \"language\": \"EN_US\", \"artist\": { \"id\": 1 }, \"album\": { \"id\": 1 } }")))
+            @Valid @RequestBody Song updatedSong){
 
         return songRepository.findById(id).map(
                 song -> {
                     song.setTitle(updatedSong.getTitle());
                     song.setLanguage(updatedSong.getLanguage());
-                    song.setArtist(updatedSong.getArtist()); // Atualiza o artista
-                    song.setAlbum(updatedSong.getAlbum());   // Atualiza o álbum
+                    song.setArtist(updatedSong.getArtist());
+                    song.setAlbum(updatedSong.getAlbum());
                     return ResponseEntity.ok(songRepository.save(song));
                 }
-        ).orElseGet(() -> {
-            return ResponseEntity.created(URI.create("/songs/"+
-                            updatedSong.getId()))
-                    .body(songRepository.save(updatedSong));
-        });
+        ).orElseGet(() -> ResponseEntity.created(URI.create("/songs/"+
+                        updatedSong.getId()))
+                .body(songRepository.save(updatedSong)));
     }
 
+    @Operation(summary = "Deleta uma música pelo ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Música deletada com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Música não encontrada")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSong(@PathVariable long id){
-        var song = songRepository.findById(id).orElse(null);
-        if(song == null)
+        if (!songRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
-
+        }
         songRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

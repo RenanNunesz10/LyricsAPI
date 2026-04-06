@@ -27,9 +27,9 @@ public class SwaggerConfig {
                                  * **Baixo Acoplamento:** Elimina a necessidade de *hardcoding* de URLs no front-end, já que a própria API guia os próximos passos.\s
                                  ---
                                 \s
-                                 **CRUD completo:**
+                                 **CRUD completo**
                                 \s
-                                  Todas as entidades possuem suporte completo a operações CRUD (POST, GET, PUT, DELETE).
+                                  Todas as entidades possuem suporte completo a operações CRUD (`POST`, `GET`, `PUT`, `DELETE`).
                                   \s""")
                         .contact(new Contact()
                                 .name("Renan Nunes")
