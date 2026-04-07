@@ -1,4 +1,4 @@
-# 🎵 API de Catálogo Musical (Lyrics API)
+# API de Catálogo Musical (Lyrics API)
 
 Uma API RESTful desenvolvida em **Spring Boot** para gerenciar um catálogo musical completo. O sistema permite o gerenciamento de artistas, álbuns, músicas, gêneros musicais e letras, aplicando os principais conceitos de arquitetura REST, validação de dados, paginação e documentação.
 
