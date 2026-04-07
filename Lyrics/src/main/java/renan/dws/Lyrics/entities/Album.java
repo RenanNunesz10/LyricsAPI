@@ -5,9 +5,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 import java.util.Objects;
 
+@Setter
+@Getter
 @Entity
 public class Album {
 
@@ -16,11 +21,11 @@ public class Album {
     private long id;
 
     @NotBlank(message = "O título do álbum é obrigatório")
-    @Column(nullable = false) // <-- Proteção direto na tabela do banco (H2)
+    @Column(nullable = false)
     private String title;
 
     @Min(value = 1900, message = "O ano de lançamento deve ser maior ou igual a 1900")
-    @Max(value = 2026, message = "O ano de lançamento não pode estar no futuro") // <-- Regra extra legal de ter!
+    @Max(value = 2026, message = "O ano de lançamento não pode estar no futuro")
     private int releaseYear;
 
     // 1:N (Um álbum tem várias músicas)
@@ -29,38 +34,6 @@ public class Album {
     private List<Song> songs;
 
     public Album() {}
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public int getReleaseYear() {
-        return releaseYear;
-    }
-
-    public void setReleaseYear(int releaseYear) {
-        this.releaseYear = releaseYear;
-    }
-
-    public List<Song> getSongs() {
-        return songs;
-    }
-
-    public void setSongs(List<Song> songs) {
-        this.songs = songs;
-    }
 
     @Override
     public boolean equals(Object o) {

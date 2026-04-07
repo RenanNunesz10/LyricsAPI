@@ -3,9 +3,14 @@ package renan.dws.Lyrics.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 import java.util.Objects;
 
+@Setter
+@Getter
 @Entity
 public class Genre {
 
@@ -14,7 +19,7 @@ public class Genre {
     private long id;
 
     @NotBlank(message = "O nome do gênero é obrigatório")
-    @Column(unique = true, nullable = false) // <-- Adicionamos o nullable = false aqui
+    @Column(unique = true, nullable = false)
     private String name;
 
     @ManyToMany(mappedBy = "genres")
@@ -22,30 +27,6 @@ public class Genre {
     private List<Song> songs;
 
     public Genre() {}
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<Song> getSongs() {
-        return songs;
-    }
-
-    public void setSongs(List<Song> songs) {
-        this.songs = songs;
-    }
 
     @Override
     public boolean equals(Object o) {

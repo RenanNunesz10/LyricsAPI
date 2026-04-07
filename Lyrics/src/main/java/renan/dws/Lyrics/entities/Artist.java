@@ -3,9 +3,14 @@ package renan.dws.Lyrics.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 import java.util.Objects;
 
+@Setter
+@Getter
 @Entity
 public class Artist {
 
@@ -14,49 +19,17 @@ public class Artist {
     private long id;
 
     @NotBlank(message = "O nome do artista é obrigatório")
-    @Column(nullable = false) // <-- Proteção no banco de dados
+    @Column(nullable = false)
     private String name;
 
-    private String nationality; // Deixei opcional, mas você pode adicionar validações se quiser!
+    private String nationality;
 
     // 1:N (Um artista tem várias músicas)
     @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL)
-    @JsonIgnore // Evita um loop infinito do json
+    @JsonIgnore
     private List<Song> songs;
 
     public Artist() {}
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getNationality() {
-        return nationality;
-    }
-
-    public void setNationality(String nationality) {
-        this.nationality = nationality;
-    }
-
-    public List<Song> getSongs() {
-        return songs;
-    }
-
-    public void setSongs(List<Song> songs) {
-        this.songs = songs;
-    }
 
     @Override
     public boolean equals(Object o) {

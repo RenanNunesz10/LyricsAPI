@@ -19,11 +19,8 @@ public class DataSeeder {
                                    LyricsDetailsRepository lyricsDetailsRepository) {
         return _ -> {
             if (artistRepository.count() == 0) {
-                System.out.println("🌱 Semeando dados iniciais no banco de dados...");
 
-                // ==========================
                 // 1. GÊNEROS MUSICAIS
-                // ==========================
                 Genre rockClassic = new Genre();
                 rockClassic.setName("Rock Clássico");
                 genreRepository.save(rockClassic);
@@ -37,9 +34,7 @@ public class DataSeeder {
                 genreRepository.save(forro);
 
 
-                // ==========================
                 // 2. QUEEN (Bohemian Rhapsody)
-                // ==========================
                 Artist queen = new Artist();
                 queen.setName("Queen");
                 queen.setNationality("Britânica");
@@ -65,9 +60,7 @@ public class DataSeeder {
                 lyricsDetailsRepository.save(lyricsQueen);
 
 
-                // ==========================
                 // 3. LINKIN PARK (In The End)
-                // ==========================
                 Artist linkinPark = new Artist();
                 linkinPark.setName("Linkin Park");
                 linkinPark.setNationality("Estadunidense");
@@ -92,10 +85,7 @@ public class DataSeeder {
                 lyricsLinkin.setSong(inTheEnd);
                 lyricsDetailsRepository.save(lyricsLinkin);
 
-
-                // ==========================
-                // 4. CALCINHA PRETA (Mágica)
-                // ==========================
+                // 4. CALCINHA PRETA
                 Artist calcinhaPreta = new Artist();
                 calcinhaPreta.setName("Calcinha Preta");
                 calcinhaPreta.setNationality("Brasileira");
@@ -120,9 +110,9 @@ public class DataSeeder {
                 lyricsCalcinha.setSong(magica);
                 lyricsDetailsRepository.save(lyricsCalcinha);
 
-                System.out.println("✅ Banco de dados populado com sucesso!");
+                System.out.println("Banco de dados populado com sucesso!");
             } else {
-                System.out.println("👍 Banco de dados já possui registros. Pulando a semeadura.");
+                System.out.println("Banco de dados já possui registros. Pulando a semeadura.");
             }
         };
     }

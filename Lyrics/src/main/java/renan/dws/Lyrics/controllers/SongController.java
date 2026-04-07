@@ -102,7 +102,7 @@ public class SongController {
                     description = "Dados da música a ser criada", required = true,
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Song.class),
-                            examples = @ExampleObject(value = "{ \"title\": \"Bohemian Rhapsody\", \"language\": \"EN_US\" }")))
+                            examples = @ExampleObject(value = "{ \"title\": \"Bohemian Rhapsody\", \"language\": \"EN_US\", \"artist\": { \"id\": 1 }, \"album\": { \"id\": 1 } }")))
             @Valid @RequestBody Song newSong){
 
         songRepository.save(newSong);
