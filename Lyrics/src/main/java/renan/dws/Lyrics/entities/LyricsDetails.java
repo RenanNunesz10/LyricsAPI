@@ -18,15 +18,15 @@ public class LyricsDetails {
     private long id;
 
     @NotBlank(message = "A letra da música não pode estar vazia")
-    @Column(columnDefinition = "TEXT", nullable = false) // <-- Adicionamos nullable = false
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String textBody;
 
     private String originalWriters;
 
     // 1:1 (A letra pertence a uma música)
-    @NotNull(message = "A letra deve estar obrigatoriamente vinculada a uma música") // <-- Proteção da API
+    @NotNull(message = "A letra deve estar obrigatoriamente vinculada a uma música")
     @OneToOne
-    @JoinColumn(name = "song_id", referencedColumnName = "id", nullable = false) // <-- Proteção do Banco
+    @JoinColumn(name = "song_id", referencedColumnName = "id", nullable = false)
     private Song song;
 
     public LyricsDetails() {}
