@@ -1,6 +1,8 @@
 package renan.dws.Lyrics.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -92,6 +94,7 @@ public class LyricsDetailsController {
                             schema = @Schema(implementation = LyricsDetails.class)) }),
             @ApiResponse(responseCode = "400", description = "Erro de validação: Letra vazia ou música ausente", content = @Content) })
     @PostMapping
+    @Parameter(name = "X-Idempotency-Key", description = "Chave de idempotência para evitar duplicidade", in = ParameterIn.HEADER)
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<LyricsDetails> createLyricsDetails(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
