@@ -46,13 +46,30 @@ public class SongController {
         this.pagedResourcesAssembler = pagedResourcesAssembler;
     }
 
+    // ==========================================
+    // GET /songs ATUALIZADO PARA REPLICAR A IMAGEM
+    // ==========================================
     @Operation(
             summary = "Lista todas as músicas",
-            description = "Retorna uma lista paginada de todas as músicas cadastradas. A resposta inclui links de navegação **HATEOAS** para transitar entre as páginas de resultados."
+            description = """
+                    Recupera uma lista paginada de todas as músicas disponíveis no catálogo.
+                    
+                    **API Versioning (X-API-Version header):**
+                    * Version 1 (Default): Recupera uma lista simplificada. Exclui relacionamentos profundos (como letras e gêneros) para otimizar o tamanho do payload e a performance.
+                    * Version 2: Recupera uma lista abrangente. Inclui todos os relacionamentos profundos (Artista, Gêneros, Detalhes) e um cabeçalho HTTP de rastreamento experimental.
+                    """
     )
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<PagedModel<EntityModel<Song>>> getSongs(@ParameterObject Pageable pageable){
+    public ResponseEntity<PagedModel<EntityModel<Song>>> getSongs(
+            @Parameter(
+                    name = "X-API-Version",
+                    in = ParameterIn.HEADER,
+                    schema = @Schema(type = "string", allowableValues = {"1", "2"}, defaultValue = "1")
+            )
+            @RequestHeader(value = "X-API-Version", defaultValue = "1", required = false) String version,
+            @ParameterObject Pageable pageable){
+
         var songs = songRepository.findAll(pageable);
         PagedModel<EntityModel<Song>> pagedModelSongs = pagedResourcesAssembler.toModel(songs);
         return ResponseEntity.ok(pagedModelSongs);
@@ -75,7 +92,7 @@ public class SongController {
 
         return EntityModel.of(song,
                 linkTo(methodOn(SongController.class).getSongById(id)).withSelfRel(),
-                linkTo(methodOn(SongController.class).getSongs(Pageable.unpaged())).withRel("songs"));
+                linkTo(methodOn(SongController.class).getSongs(null, Pageable.unpaged())).withRel("songs"));
     }
 
     @Operation(
@@ -163,8 +180,8 @@ public class SongController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Versionamento (V1.0)", description = "Retorna os dados da música em um formato plano.")
-    @GetMapping(value = "/info", headers = "X-API-Version=1.0")
+    @Operation(summary = "Versionamento (V1)", description = "Retorna os dados da música em um formato plano.")
+    @GetMapping(value = "/info", headers = "X-API-Version=1")
     public ResponseEntity<Map<String, String>> getSongInfoV1() {
 
         Map<String, String> responseV1 = new java.util.HashMap<>();
@@ -175,8 +192,8 @@ public class SongController {
         return ResponseEntity.ok(responseV1);
     }
 
-    @Operation(summary = "Versionamento (V2.0)", description = "Retorna os dados da música em um formato estruturado.")
-    @GetMapping(value = "/info", headers = "X-API-Version=2.0")
+    @Operation(summary = "Versionamento (V2)", description = "Retorna os dados da música em um formato estruturado.")
+    @GetMapping(value = "/info", headers = "X-API-Version=2")
     public ResponseEntity<Map<String, Object>> getSongInfoV2() {
 
         Map<String, String> artista = new java.util.HashMap<>();
@@ -191,7 +208,6 @@ public class SongController {
         return ResponseEntity.ok(responseV2);
     }
 
-    // Captura erros de versão
     @Operation(summary = "Fallback de Versão", hidden = true)
     @GetMapping(value = "/info")
     public ResponseEntity<String> invalidVersion(
@@ -199,10 +215,10 @@ public class SongController {
 
         if (version == null) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
-                    .body("Erro: O cabeçalho 'X-API-Version' é obrigatório (Use 1.0 ou 2.0).");
+                    .body("Erro: O cabeçalho 'X-API-Version' é obrigatório (Use 1 ou 2).");
         }
 
         return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
-                .body("Erro: A versão '" + version + "' não é suportada. Use X-API-Version 1.0 ou 2.0.");
+                .body("Erro: A versão '" + version + "' não é suportada. Use X-API-Version 1 ou 2.");
     }
 }

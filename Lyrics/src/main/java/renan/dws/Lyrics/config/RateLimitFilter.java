@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -17,21 +18,20 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@Order(1) // Executa primeiro, protegendo a API
 public class RateLimitFilter extends OncePerRequestFilter {
 
-    // Cache em memória que guarda um "balde" (Bucket) para cada IP diferente
     private final Map<String, Bucket> cache = new ConcurrentHashMap<>();
+    private final long CAPACIDADE_MAXIMA = 5; // 5 requisições
 
-    // Configuração da regra: Cria um balde com 5 requisições por minuto
     private Bucket createNewBucket() {
         Bandwidth limit = Bandwidth.builder()
-                .capacity(5) // Capacidade máxima
-                .refillGreedy(5, Duration.ofMinutes(1)) // Recarrega 5 fichas a cada 1 minuto
+                .capacity(CAPACIDADE_MAXIMA)
+                .refillGreedy(CAPACIDADE_MAXIMA, Duration.ofMinutes(1)) // Recarrega a cada 1 minuto
                 .build();
         return Bucket.builder().addLimit(limit).build();
     }
 
-    // Busca o balde do IP, ou cria um novo se for o primeiro acesso dele
     private Bucket resolveBucket(String ip) {
         return cache.computeIfAbsent(ip, k -> createNewBucket());
     }
@@ -40,27 +40,39 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Pega o IP do cliente
+        String path = request.getRequestURI();
+
+        // Ignora o Swagger e a geração de chaves para não gastar o limite
+        if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.startsWith("/api-keys")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String ip = request.getRemoteAddr();
         Bucket bucket = resolveBucket(ip);
-
-        // 2. Tenta consumir 1 ficha do balde e retorna os dados dessa operação (ConsumptionProbe)
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
+        // Headers de "uso e limite" que o professor pediu (enviados em TODAS as requisições)
+        response.addHeader("X-RateLimit-Limit", String.valueOf(CAPACIDADE_MAXIMA));
+        response.addHeader("X-RateLimit-Remaining", String.valueOf(probe.getRemainingTokens()));
+
+        System.out.println("⏱️ [Rate Limit] IP: " + ip + " | Restantes: " + probe.getRemainingTokens());
+
         if (probe.isConsumed()) {
-            // Sucesso! A requisição passou.
-            // Adicionamos um Header opcional mostrando quantas requisições o IP ainda tem
-            response.addHeader("X-Rate-Limit-Remaining", String.valueOf(probe.getRemainingTokens()));
+            // Requisição liberada!
             filterChain.doFilter(request, response);
         } else {
-            // 3. Limite estourou! Pega os segundos restantes para o balde recarregar
+            // Limite excedido!
             long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
 
-            // 4. Retorna os requisitos exatos pedidos pelo professor (Header Retry-After e Status 429)
+            System.out.println("🚨 [Rate Limit] BLOQUEADO! Aguarde " + waitForRefill + "s");
+
+            // Header extra exigido no erro 429
             response.addHeader("Retry-After", String.valueOf(waitForRefill));
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setContentType("application/json");
-            response.getWriter().write("{\"erro\": \"Muitas requisições (Rate Limit). Tente novamente em " + waitForRefill + " segundos.\"}");
+
+            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value()); // Status 429
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"erro\": \"Too Many Requests. Limite de requisições excedido. Tente novamente em " + waitForRefill + " segundos.\"}");
         }
     }
 }
