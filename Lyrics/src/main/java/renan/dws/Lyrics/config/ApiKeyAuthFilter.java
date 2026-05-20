@@ -14,8 +14,12 @@ import java.io.IOException;
 public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
     private static final String API_KEY_HEADER = "X-API-Key";
-    // Para fins acadêmicos, deixamos fixo. Em produção, isso viria do banco de dados ou .env
-    private static final String VALID_API_KEY = "lyrics-secreta-123";
+    private final ApiKeyService apiKeyService;
+
+    // Injetamos o serviço aqui
+    public ApiKeyAuthFilter(ApiKeyService apiKeyService) {
+        this.apiKeyService = apiKeyService;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -23,21 +27,18 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // 1. Libera o Swagger para não precisar de chave para ler a documentação
+        // Libera o Swagger para não precisar de chave para ler a documentação
         if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 2. Extrai o header da requisição
         String reqApiKey = request.getHeader(API_KEY_HEADER);
 
-        // 3. Valida a chave
-        if (VALID_API_KEY.equals(reqApiKey)) {
-            // Chave correta! Deixa a requisição seguir para o Controller
+        // Agora verificamos a chave usando o serviço dinâmico!
+        if (reqApiKey != null && apiKeyService.isValid(reqApiKey)) {
             filterChain.doFilter(request, response);
         } else {
-            // Chave incorreta ou ausente! Bloqueia e retorna 401
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("application/json");
             response.getWriter().write("{\"erro\": \"Acesso negado. Chave de API ('X-API-Key') ausente ou invalida.\"}");
