@@ -27,20 +27,20 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // Libera o Swagger para não precisar de chave para ler a documentação
-        if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")) {
+        // 1. Libera o Swagger E o endpoint de gerenciamento de chaves!
+        if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.startsWith("/api-keys")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String reqApiKey = request.getHeader(API_KEY_HEADER);
 
-        // Agora verificamos a chave usando o serviço dinâmico!
+        // 2. Valida a chave para as demais rotas (como /songs)
         if (reqApiKey != null && apiKeyService.isValid(reqApiKey)) {
             filterChain.doFilter(request, response);
         } else {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/json");
+            response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"erro\": \"Acesso negado. Chave de API ('X-API-Key') ausente ou invalida.\"}");
         }
     }

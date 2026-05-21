@@ -179,46 +179,4 @@ public class SongController {
         songRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
-    @Operation(summary = "Versionamento (V1)", description = "Retorna os dados da música em um formato plano.")
-    @GetMapping(value = "/info", headers = "X-API-Version=1")
-    public ResponseEntity<Map<String, String>> getSongInfoV1() {
-
-        Map<String, String> responseV1 = new java.util.HashMap<>();
-        responseV1.put("titulo", "Bohemian Rhapsody");
-        responseV1.put("banda", "Queen");
-        responseV1.put("ano", "1975");
-
-        return ResponseEntity.ok(responseV1);
-    }
-
-    @Operation(summary = "Versionamento (V2)", description = "Retorna os dados da música em um formato estruturado.")
-    @GetMapping(value = "/info", headers = "X-API-Version=2")
-    public ResponseEntity<Map<String, Object>> getSongInfoV2() {
-
-        Map<String, String> artista = new java.util.HashMap<>();
-        artista.put("nome", "Queen");
-        artista.put("nacionalidade", "Britânica");
-
-        Map<String, Object> responseV2 = new java.util.HashMap<>();
-        responseV2.put("titulo", "Bohemian Rhapsody");
-        responseV2.put("lancamento", 1975);
-        responseV2.put("artista", artista);
-
-        return ResponseEntity.ok(responseV2);
-    }
-
-    @Operation(summary = "Fallback de Versão", hidden = true)
-    @GetMapping(value = "/info")
-    public ResponseEntity<String> invalidVersion(
-            @RequestHeader(value = "X-API-Version", required = false) String version) {
-
-        if (version == null) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
-                    .body("Erro: O cabeçalho 'X-API-Version' é obrigatório (Use 1 ou 2).");
-        }
-
-        return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
-                .body("Erro: A versão '" + version + "' não é suportada. Use X-API-Version 1 ou 2.");
-    }
 }
