@@ -16,7 +16,6 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
     private static final String API_KEY_HEADER = "X-API-Key";
     private final ApiKeyService apiKeyService;
 
-    // Injetamos o serviço aqui
     public ApiKeyAuthFilter(ApiKeyService apiKeyService) {
         this.apiKeyService = apiKeyService;
     }
@@ -25,9 +24,13 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String path = request.getRequestURI();
 
-        // 1. Libera o Swagger E o endpoint de gerenciamento de chaves!
         if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.startsWith("/api-keys")) {
             filterChain.doFilter(request, response);
             return;
@@ -35,7 +38,6 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
         String reqApiKey = request.getHeader(API_KEY_HEADER);
 
-        // 2. Valida a chave para as demais rotas (como /songs)
         if (reqApiKey != null && apiKeyService.isValid(reqApiKey)) {
             filterChain.doFilter(request, response);
         } else {
